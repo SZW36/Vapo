@@ -72,8 +72,7 @@ class CreateUser(Resource):
         if(not group):
             group = Group(creation_date=datetime.now(), num_of_members=0)
             db.session.add(group)
-        else:
-            group.num_of_members += 1 
+        group.num_of_members += 1 
         db.session.commit()
 
         user = User(username=username, hashed_pwd=hashed_pwd, date_joined=datetime.now(), free_days=0, target=7, group_id=group.id)
@@ -104,6 +103,31 @@ class Login(Resource):
             return {"success": False, "user_id": None}
 
 api.add_resource(Login, '/login')
+
+
+# class Posts(Resource):
+#     def post(self):
+#         data = request.data
+#         data = json.loads(data)
+#         print(data)
+#         username = data["username"]
+#         password = data["password"]
+
+#         user = db.session.query(User).filter_by(username=username).first()
+
+#         if(not user):
+#             return {"success": False, "user_id": None}
+
+#         # hash password
+#         bcrypt = Bcrypt()
+#         match = bcrypt.check_password_hash(user.hashed_pwd, password)
+#         if(match):
+#             return {"success": True, "user_id": user.id}
+#         else:
+#             return {"success": False, "user_id": None}
+
+# api.add_resource(Login, '/login')
+
 
 if __name__ == '__main__':
     app.run()
