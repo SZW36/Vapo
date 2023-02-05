@@ -29,7 +29,9 @@ class User(db.Model):
 
 class Group(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    group_id = db.Column(db.Integer, nullable=False)
+    creation_date = db.Column(db.DateTime, nullable=False)
+    num_of_members = db.Column(db.Integer)
+
 
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -50,17 +52,31 @@ from flask_restful import Resource
 from flask import request
 from flask_bcrypt import Bcrypt
 import json
+from datetime import datetime
+from sqlalchemy import or_
 
 class CreateUser(Resource):
     def post(self):
+        # get imputs 
         data = request.data
         data = json.loads(data)
         username = data["username"]
         password = data["password"]
+
         # hash password
         bcrypt = Bcrypt()
         hashed_pwd = bcrypt.generate_password_hash(password).decode('utf-8')
-        user = User(username=username, hashed_pwd=hashed_pwd)
+
+        # find a group or generate a group
+        group = Group.query.filter(or_(Group.creation_date == datetime.today().date(), Group.num_of_members < 7)).first()
+        if(not group):
+            group = Group(creation_date=datetime.now(), num_of_members=0)
+            db.session.add(group)
+        else:
+            group.num_of_members += 1 
+        db.session.commit()
+
+        user = User(username=username, hashed_pwd=hashed_pwd, date_joined=datetime.now(), free_days=0, target=7, group_id=group.id)
         db.session.add(user)
         db.session.commit()
         return 200
