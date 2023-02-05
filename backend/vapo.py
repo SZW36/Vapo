@@ -85,7 +85,6 @@ class Login(Resource):
     def post(self):
         data = request.data
         data = json.loads(data)
-        print(data)
         username = data["username"]
         password = data["password"]
 
@@ -105,29 +104,80 @@ class Login(Resource):
 api.add_resource(Login, '/login')
 
 
-# class Posts(Resource):
-#     def post(self):
-#         data = request.data
-#         data = json.loads(data)
-#         print(data)
-#         username = data["username"]
-#         password = data["password"]
+class GetPost(Resource):
+    def post(self):
+        data = request.data
+        data = json.loads(data)
 
-#         user = db.session.query(User).filter_by(username=username).first()
+        # print(data)
 
-#         if(not user):
-#             return {"success": False, "user_id": None}
+        user_id = data["user_id"]
+        # find user first
+        user = db.session.query(User).filter_by(id=user_id).first()
+        # find group members
+        group_members = []
+        group = db.session.query(User).filter_by(group_id=user.group_id).all()
+        for person in group:
+            group_members.append(person)
+        
+        posts = []
+        for person in group_members:
+            curr_post = db.session.query(Post).filter_by(user_id=person.id).all()
+            for post in curr_post:
+                posts.append({"username": person.username, "content": post.content, "date": post.date.isoformat(), "id":post.id})
+        
+        return posts
 
-#         # hash password
-#         bcrypt = Bcrypt()
-#         match = bcrypt.check_password_hash(user.hashed_pwd, password)
-#         if(match):
-#             return {"success": True, "user_id": user.id}
-#         else:
-#             return {"success": False, "user_id": None}
+api.add_resource(GetPost, '/get_post')
 
-# api.add_resource(Login, '/login')
+class GetSubPost(Resource):
+    def post(self):
+        data = request.data
+        data = json.loads(data)
 
+        print(data)
+
+        post_id = data["post_id"]
+        # find user first
+        post_list = db.session.query(Subpost).filter_by(post_id=post_id).all()
+        
+        posts = []
+        for post in post_list:
+            parent_post = db.session.query(Post).filter_by(id=post.post_id).first()
+            user = db.session.query(User).filter_by(id=parent_post.user_id).first()
+            posts.append({"username": user.username, "content": post.content, "date": post.date.isoformat()})
+        
+        return posts
+
+api.add_resource(GetSubPost, '/get_sub_post')
+
+class CreatePost(Resource):
+    def post(self):
+        data = request.data
+        data = json.loads(data)
+        # print(data)
+        user_id = data["user_id"]
+        content = data["content"]
+
+        cur_post = Post(user_id = user_id, date = datetime.now(), content = content)
+        db.session.add(cur_post)
+        db.session.commit()
+
+api.add_resource(CreatePost, '/create_post')
+
+class CreateSubPost(Resource):
+    def post(self):
+        data = request.data
+        data = json.loads(data)
+        # print(data)
+        content = data["content"]
+        post_id = data["post_id"]
+
+        cur_post = Subpost(content=content, date = datetime.now(), post_id=post_id)
+        db.session.add(cur_post)
+        db.session.commit()
+
+api.add_resource(CreateSubPost, '/create_sub_post')
 
 if __name__ == '__main__':
     app.run()
