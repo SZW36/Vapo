@@ -16,19 +16,13 @@ db = SQLAlchemy(app)
 # Settings for migrations
 migrate = Migrate(app, db)
 
-# # testing endpoint
-# class TestingClass(Resource):
-#     def get(self):
-#         data = "testing message"
-#         return data
-# api.add_resource(TestingClass, '/test_endpoint')
-
 # adding this line for db migrate and upgrate
 from models import *
 
 from endpoints import *
 
-api.add_resource(TestingClass, '/test_endpoint')
+api.add_resource(Login, '/login')
+api.add_resource(CreateUser, '/create_user')
 
 if __name__ == '__main__':
     app.run()

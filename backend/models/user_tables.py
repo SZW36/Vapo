@@ -1,18 +1,32 @@
 from vapo import db
 
 # testing db schema
-class Users(db.Model):
+class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), nullable=False)
+    hashed_pwd = db.Column(db.String(100), nullable=False)
+    date_joined = db.Column(db.DateTime)
+    free_days = db.Column(db.Integer, nullable=False)
+    target = db.Column(db.Integer)
+    group_id = db.Column(db.Integer)
 
-class Posts(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    posts = db.Column(db.String(100), nullable=False)
+    posts = db.relationship('Post', backref='users')
 
-class Progress(db.Model):
+class Group(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    count = db.Column(db.Integer, nullable=False)
+    group_id = db.Column(db.Integer, nullable=False)
 
-class Friends(db.Model):
+class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    date = db.Column(db.DateTime)
+    content = db.Column(db.String(100), nullable=False)
+
+    subposts = db.relationship('Subpost', backref='post')
+
+class Subpost(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.String(100))
+    date = db.Column(db.DateTime)
+
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'))

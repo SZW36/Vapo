@@ -1,1 +1,1 @@
-from .user_tables import Users, Posts, Progress, Friends
+from .user_tables import User, Post, Subpost, Group
